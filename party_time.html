@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Party Time!</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .glass-panel { background: rgba(31, 41, 55, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .hide { display: none !important; }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); rounded: 4px; }
+        ::-webkit-scrollbar-thumb { background: rgba(139, 92, 246, 0.5); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(139, 92, 246, 0.8); }
+    </style>
+</head>
+<body class="bg-gray-950 text-gray-100 min-h-screen flex flex-col bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-gray-900 via-gray-950 to-black">
+
+    <!-- Login Screen -->
+    <div id="login-screen" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-950/90 backdrop-blur-sm">
+        <div class="glass-panel p-8 rounded-2xl shadow-2xl w-full max-w-sm text-center transform transition-all">
+            <h1 class="text-5xl font-black mb-2 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-500 tracking-tight">Party Time!</h1>
+            <p class="text-gray-400 mb-8 text-sm">Enter your username to join the party.</p>
+            <input type="text" id="username-input" class="w-full bg-gray-900/50 text-white border border-gray-700 rounded-xl px-4 py-3 mb-4 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all text-center" placeholder="Username">
+            <button id="login-btn" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold py-3 px-4 rounded-xl shadow-lg hover:shadow-purple-500/25 transition-all active:scale-95">Enter Dashboard</button>
+        </div>
+    </div>
+
+    <!-- Main App Wrapper -->
+    <div id="app-wrapper" class="hide flex-1 flex flex-col relative">
+        <!-- Header -->
+        <header class="glass-panel sticky top-0 z-40 px-6 py-4 flex justify-between items-center shadow-lg border-b border-gray-800">
+            <h1 class="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-500 tracking-tight">Party Time!</h1>
+            <div class="flex items-center gap-6">
+                <div class="flex gap-4 bg-gray-900/50 px-4 py-2 rounded-xl border border-gray-800">
+                    <div class="text-center">
+                        <div class="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Notes</div>
+                        <div id="player-notes" class="text-purple-400 font-bold text-lg leading-none">0</div>
+                    </div>
+                    <div class="w-px bg-gray-700"></div>
+                    <div class="text-center">
+                        <div class="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Gift Boxes</div>
+                        <div id="player-boxes" class="text-pink-400 font-bold text-lg leading-none">0</div>
+                    </div>
+                </div>
+                <div class="text-right hidden sm:block">
+                    <div id="player-name" class="font-bold text-sm text-gray-200">Player</div>
+                    <button id="logout-btn" class="text-gray-500 hover:text-gray-300 text-xs transition-colors">Switch User</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-4 md:p-6 max-w-6xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            <!-- Left Column (Actions & Inventory) -->
+            <div class="lg:col-span-5 space-y-6">
+                
+                <!-- Gift Box Section -->
+                <section class="glass-panel rounded-2xl p-6 shadow-xl relative overflow-hidden group">
+                    <div class="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-pink-500/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <h2 class="text-xl font-bold mb-1 relative z-10">Gift Boxes</h2>
+                    <p class="text-gray-400 text-sm mb-4 relative z-10">Open boxes to receive random items from the global pool.</p>
+                    
+                    <div class="space-y-3 relative z-10">
+                        <button id="open-box-btn" class="w-full bg-pink-600 hover:bg-pink-500 text-white font-bold py-3 rounded-xl shadow-lg transition-transform active:scale-95 flex justify-center items-center gap-2">
+                            <span>Open 1 Gift Box</span>
+                            <span class="bg-black/20 text-xs px-2 py-1 rounded-md">Uses 1 Box</span>
+                        </button>
+                        
+                        <button id="buy-box-btn" class="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold py-3 rounded-xl shadow-lg transition-transform active:scale-95 flex justify-center items-center gap-2">
+                            <span>Buy & Open</span>
+                            <span class="bg-black/20 text-xs px-2 py-1 rounded-md">Costs 10 Notes</span>
+                        </button>
+                    </div>
+                </section>
+
+                <!-- Vouchers -->
+                <section class="glass-panel rounded-2xl p-6 shadow-xl">
+                    <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+                        <span>Redeem Voucher</span>
+                    </h2>
+                    <div class="flex gap-2">
+                        <input type="text" id="voucher-input" class="flex-1 bg-gray-900 border border-gray-700 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-purple-500 uppercase tracking-widest" placeholder="ENTER CODE">
+                        <button id="redeem-voucher-btn" class="bg-gray-800 hover:bg-gray-700 border border-gray-600 px-6 py-2 rounded-xl font-bold transition-colors">Claim</button>
+                    </div>
+                </section>
+
+                <!-- Inventory -->
+                <section class="glass-panel rounded-2xl p-6 shadow-xl flex flex-col max-h-[400px]">
+                    <h2 class="text-xl font-bold mb-4">Your Inventory</h2>
+                    <div id="inventory-list" class="flex-1 overflow-y-auto space-y-2 pr-2">
+                        <div class="text-gray-500 text-sm italic text-center py-4">Loading inventory...</div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Right Column (Tournaments) -->
+            <div class="lg:col-span-7 space-y-6">
+                <!-- Tournaments -->
+                <section class="glass-panel rounded-2xl p-6 shadow-xl h-full flex flex-col">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-indigo-400">Active Tournaments</h2>
+                        <span class="bg-purple-900/50 text-purple-300 text-xs px-3 py-1 rounded-full border border-purple-800/50">Live</span>
+                    </div>
+                    <div id="tournaments-list" class="flex-1 space-y-4 overflow-y-auto pr-2 pb-4">
+                        <div class="text-gray-500 text-sm italic text-center py-8">Loading tournaments...</div>
+                    </div>
+                </section>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="py-4 text-center">
+            <button id="open-admin-btn" class="text-gray-700 hover:text-gray-400 text-xs transition-colors font-mono">Admin Panel</button>
+        </footer>
+    </div>
+
+    <!-- Admin Panel Modal -->
+    <div id="admin-modal" class="fixed inset-0 z-[60] flex items-center justify-center bg-black/90 backdrop-blur-sm hide">
+        <div class="glass-panel w-full max-w-5xl h-[85vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden relative border border-gray-700">
+            <!-- Passcode Gate -->
+            <div id="admin-login" class="absolute inset-0 bg-gray-950 z-20 flex flex-col items-center justify-center">
+                <h2 class="text-3xl font-black mb-6 text-red-500 tracking-widest uppercase">Admin Access</h2>
+                <input type="password" id="admin-pass-input" class="bg-gray-900 border border-gray-700 rounded-xl px-6 py-3 mb-6 text-center text-xl tracking-[0.5em] focus:outline-none focus:border-red-500 transition-colors w-64" placeholder="••••">
+                <div class="flex gap-4">
+                    <button id="admin-enter-btn" class="bg-red-600 hover:bg-red-500 px-8 py-3 rounded-xl font-bold transition-transform active:scale-95 shadow-lg shadow-red-600/20">Authorize</button>
+                    <button id="admin-close-btn" class="bg-gray-800 hover:bg-gray-700 px-8 py-3 rounded-xl font-bold transition-colors">Cancel</button>
+                </div>
+                <div id="admin-error" class="text-red-500 text-sm mt-6 font-bold tracking-widest hidden animate-pulse">ACCESS DENIED</div>
+            </div>
+
+            <!-- Admin Interface -->
+            <div id="admin-ui" class="flex flex-col h-full hide">
+                <div class="bg-gray-900 border-b border-gray-800 p-4 flex justify-between items-center shadow-md z-10">
+                    <h2 class="text-xl font-black text-red-500 tracking-wider">ADMINISTRATOR DASHBOARD</h2>
+                    <button id="admin-exit-btn" class="text-gray-400 hover:text-white bg-gray-800 px-4 py-1.5 rounded-lg text-sm font-bold">Terminate Session</button>
+                </div>
+                
+                <!-- Admin Tabs -->
+                <div class="flex border-b border-gray-800 bg-gray-950">
+                    <button class="admin-tab active flex-1 py-4 text-sm font-bold border-b-2 border-red-500 text-white transition-colors" data-target="admin-players">Players Data</button>
+                    <button class="admin-tab flex-1 py-4 text-sm font-bold border-b-2 border-transparent text-gray-500 hover:text-gray-300 transition-colors" data-target="admin-items">Item Pool</button>
+                    <button class="admin-tab flex-1 py-4 text-sm font-bold border-b-2 border-transparent text-gray-500 hover:text-gray-300 transition-colors" data-target="admin-tournaments">Tournaments</button>
+                    <button class="admin-tab flex-1 py-4 text-sm font-bold border-b-2 border-transparent text-gray-500 hover:text-gray-300 transition-colors" data-target="admin-vouchers">Vouchers</button>
+                    <button class="admin-tab flex-1 py-4 text-sm font-bold border-b-2 border-transparent text-gray-500 hover:text-gray-300 transition-colors" data-target="admin-logs">Action Logs</button>
+                </div>
+
+                <!-- Tab Contents -->
+                <div class="flex-1 overflow-y-auto p-6 bg-gray-900/30">
+                    <!-- Players Tab -->
+                    <div id="admin-players" class="admin-tab-content">
+                        <h3 class="text-lg font-bold mb-4 text-gray-300">Player Management</h3>
+                        <div id="admin-players-list" class="space-y-4"></div>
+                    </div>
+
+                    <!-- Item Pool Tab -->
+                    <div id="admin-items" class="admin-tab-content hide">
+                        <div class="bg-gray-800/80 p-5 rounded-xl border border-gray-700 mb-6">
+                            <h3 class="text-lg font-bold mb-4 text-gray-300">Add to Global Item Pool</h3>
+                            <div class="flex gap-3">
+                                <input type="text" id="new-item-name" placeholder="Item Name (e.g. 'Golden Crown')" class="flex-1 bg-gray-900 rounded-lg px-4 py-2 text-sm border border-gray-700 focus:border-red-500 outline-none">
+                                <button id="add-item-btn" class="bg-red-600 hover:bg-red-500 px-6 py-2 rounded-lg text-sm font-bold shadow-lg shadow-red-600/20">Add Item</button>
+                            </div>
+                        </div>
+                        <h3 class="text-sm font-bold text-gray-400 mb-3 uppercase tracking-wider">Current Pool</h3>
+                        <div id="admin-items-list" class="grid grid-cols-2 md:grid-cols-3 gap-3"></div>
+                    </div>
+
+                    <!-- Tournaments Tab -->
+                    <div id="admin-tournaments" class="admin-tab-content hide">
+                        <div class="bg-gray-800/80 p-5 rounded-xl border border-gray-700 mb-6 space-y-4">
+                            <h3 class="text-lg font-bold text-gray-300">Create New Tournament</h3>
+                            <input type="text" id="new-tour-name" placeholder="Tournament Name" class="w-full bg-gray-900 rounded-lg px-4 py-2.5 text-sm border border-gray-700 focus:border-red-500 outline-none">
+                            <textarea id="new-tour-desc" placeholder="Description" rows="2" class="w-full bg-gray-900 rounded-lg px-4 py-2.5 text-sm border border-gray-700 focus:border-red-500 outline-none"></textarea>
+                            <textarea id="new-tour-rules" placeholder="Rules" rows="2" class="w-full bg-gray-900 rounded-lg px-4 py-2.5 text-sm border border-gray-700 focus:border-red-500 outline-none"></textarea>
+                            <div class="flex gap-4">
+                                <div class="flex-1 relative">
+                                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">Fee:</span>
+                                    <input type="number" id="new-tour-fee" placeholder="0" class="w-full bg-gray-900 rounded-lg pl-12 pr-4 py-2.5 text-sm border border-gray-700 focus:border-red-500 outline-none">
+                                </div>
+                                <button id="add-tour-btn" class="bg-red-600 hover:bg-red-500 px-8 py-2.5 rounded-lg text-sm font-bold shadow-lg">Create</button>
+                            </div>
+                        </div>
+                        <h3 class="text-sm font-bold text-gray-400 mb-3 uppercase tracking-wider">Active Tournaments</h3>
+                        <div id="admin-tours-list" class="space-y-3"></div>
+                    </div>
+
+                    <!-- Vouchers Tab -->
+                    <div id="admin-vouchers" class="admin-tab-content hide">
+                        <div class="bg-gray-800/80 p-5 rounded-xl border border-gray-700 mb-6">
+                            <h3 class="text-lg font-bold mb-4 text-gray-300">Create Voucher Code</h3>
+                            <div class="flex gap-3">
+                                <input type="text" id="new-voucher-code" placeholder="CODE (e.g. PARTY2026)" class="flex-1 bg-gray-900 rounded-lg px-4 py-2 text-sm border border-gray-700 focus:border-red-500 outline-none uppercase">
+                                <div class="relative w-32">
+                                    <span class="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 text-xs">Boxes:</span>
+                                    <input type="number" id="new-voucher-amount" value="1" min="1" class="w-full bg-gray-900 rounded-lg pl-12 pr-2 py-2 text-sm border border-gray-700 focus:border-red-500 outline-none">
+                                </div>
+                                <button id="add-voucher-btn" class="bg-red-600 hover:bg-red-500 px-6 py-2 rounded-lg text-sm font-bold">Create</button>
+                            </div>
+                        </div>
+                        <div id="admin-vouchers-list" class="space-y-2"></div>
+                    </div>
+
+                    <!-- Logs Tab -->
+                    <div id="admin-logs" class="admin-tab-content hide">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-bold text-gray-300">System Logs</h3>
+                        </div>
+                        <div id="admin-logs-list" class="space-y-1 text-xs font-mono bg-gray-950 p-4 rounded-xl border border-gray-800 max-h-[60vh] overflow-y-auto"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Modal for Alerts -->
+    <div id="custom-modal" class="fixed inset-0 z-[70] flex items-center justify-center bg-black/80 backdrop-blur-sm hide opacity-0 transition-opacity duration-200">
+        <div class="glass-panel p-8 rounded-2xl shadow-2xl max-w-sm w-full text-center border border-gray-700 transform scale-95 transition-transform duration-200" id="modal-content-box">
+            <h3 id="modal-title" class="text-2xl font-bold mb-2 text-white">Notice</h3>
+            <p id="modal-message" class="text-gray-300 mb-8 text-sm leading-relaxed"></p>
+            <button id="modal-close" class="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white px-8 py-3 rounded-xl font-bold w-full shadow-lg transition-transform active:scale-95">Acknowledge</button>
+        </div>
+    </div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    // Firebase Setup
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'party-time-app-123';
+    const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { projectId: "demo-project" };
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    // State
+    let currentUser = null;
+    let currentUserId = null;
+    let globalState = { users: [], items: [], tournaments: [], vouchers: [], logs: [] };
+    
+    // UI Elements map
+    const UI = {
+        loginScreen: document.getElementById('login-screen'),
+        appWrapper: document.getElementById('app-wrapper'),
+        usernameInput: document.getElementById('username-input'),
+        loginBtn: document.getElementById('login-btn'),
+        playerName: document.getElementById('player-name'),
+        playerNotes: document.getElementById('player-notes'),
+        playerBoxes: document.getElementById('player-boxes'),
+        inventoryList: document.getElementById('inventory-list'),
+        tournamentsList: document.getElementById('tournaments-list'),
+        
+        openBoxBtn: document.getElementById('open-box-btn'),
+        buyBoxBtn: document.getElementById('buy-box-btn'),
+        
+        voucherInput: document.getElementById('voucher-input'),
+        redeemVoucherBtn: document.getElementById('redeem-voucher-btn'),
+        logoutBtn: document.getElementById('logout-btn'),
+        
+        // Admin
+        adminModal: document.getElementById('admin-modal'),
+        openAdminBtn: document.getElementById('open-admin-btn'),
+        adminLogin: document.getElementById('admin-login'),
+        adminUI: document.getElementById('admin-ui'),
+        adminPassInput: document.getElementById('admin-pass-input'),
+        adminEnterBtn: document.getElementById('admin-enter-btn'),
+        adminCloseBtn: document.getElementById('admin-close-btn'),
+        adminExitBtn: document.getElementById('admin-exit-btn'),
+        adminError: document.getElementById('admin-error'),
+        adminTabs: document.querySelectorAll('.admin-tab'),
+        adminTabContents: document.querySelectorAll('.admin-tab-content'),
+        
+        // Modal
+        customModal: document.getElementById('custom-modal'),
+        modalTitle: document.getElementById('modal-title'),
+        modalMessage: document.getElementById('modal-message'),
+        modalClose: document.getElementById('modal-close'),
+        modalContentBox: document.getElementById('modal-content-box')
+    };
+
+    // Custom Modal logic
+    function showModal(title, msg) {
+        UI.modalTitle.textContent = title;
+        UI.modalMessage.textContent = msg;
+        UI.customModal.classList.remove('hide');
+        // small delay to allow display:block to apply before animating opacity
+        setTimeout(() => {
+            UI.customModal.classList.remove('opacity-0');
+            UI.modalContentBox.classList.remove('scale-95');
+            UI.modalContentBox.classList.add('scale-100');
+        }, 10);
+    }
+    
+    UI.modalClose.onclick = () => {
+        UI.customModal.classList.add('opacity-0');
+        UI.modalContentBox.classList.remove('scale-100');
+        UI.modalContentBox.classList.add('scale-95');
+        setTimeout(() => UI.customModal.classList.add('hide'), 200);
+    };
+
+    // Collection Paths (Strictly adhering to rules)
+    const usersCol = collection(db, 'artifacts', appId, 'public', 'data', 'users');
+    const itemsCol = collection(db, 'artifacts', appId, 'public', 'data', 'items');
+    const toursCol = collection(db, 'artifacts', appId, 'public', 'data', 'tournaments');
+    const vouchersCol = collection(db, 'artifacts', appId, 'public', 'data', 'vouchers');
+    const logsCol = collection(db, 'artifacts', appId, 'public', 'data', 'logs');
+
+    // Init Auth
+    async function initAuth() {
+        try {
+            if (typeof __initial_auth_token !== 'undefined') {
+                await signInWithCustomToken(auth, __initial_auth_token);
+            } else {
+                await signInAnonymously(auth);
+            }
+        } catch (e) {
+            console.error("Auth error:", e);
+        }
+    }
+
+    onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            currentUserId = user.uid;
+            checkUserSetup();
+            setupRealtimeListeners();
+        }
+    });
+
+    async function checkUserSetup() {
+        if(!currentUserId) return;
+        const userDocRef = doc(usersCol, currentUserId);
+        const docSnap = await getDoc(userDocRef);
+        if (docSnap.exists()) {
+            currentUser = docSnap.data();
+            showDashboard();
+        } else {
+            UI.loginScreen.classList.remove('hide');
+            UI.appWrapper.classList.add('hide');
+        }
+    }
+
+    // Login Flow
+    UI.loginBtn.onclick = async () => {
+        const name = UI.usernameInput.value.trim();
+        if (!name) return showModal("Error", "Please enter a valid username.");
+        if (!currentUserId) return;
+        
+        const newUser = {
+            id: currentUserId,
+            username: name,
+            notes: 0,
+            giftBoxes: 0,
+            inventory: [],
+            joinedTournaments: [],
+            redeemedVouchers: []
+        };
+        await setDoc(doc(usersCol, currentUserId), newUser);
+        currentUser = newUser;
+        showDashboard();
+    };
+
+    UI.logoutBtn.onclick = () => {
+        currentUser = null;
+        UI.loginScreen.classList.remove('hide');
+        UI.appWrapper.classList.add('hide');
+        UI.usernameInput.value = '';
+    };
+
+    function showDashboard() {
+        UI.loginScreen.classList.add('hide');
+        UI.appWrapper.classList.remove('hide');
+        updateUI();
+    }
+
+    // Realtime Sync
+    function setupRealtimeListeners() {
+        if (!currentUserId) return;
+
+        onSnapshot(usersCol, (snap) => {
+            globalState.users = snap.docs.map(d => ({id: d.id, ...d.data()}));
+            const me = globalState.users.find(u => u.id === currentUserId);
+            if (me) {
+                currentUser = me;
+                updateUI();
+            } else if (currentUser) {
+                // If I was deleted by admin
+                UI.logoutBtn.click();
+                showModal("Account Removed", "Your data was cleared by an admin.");
+            }
+            if (!UI.adminModal.classList.contains('hide')) renderAdminPlayers();
+        }, e => console.error(e));
+
+        onSnapshot(itemsCol, (snap) => {
+            globalState.items = snap.docs.map(d => ({id: d.id, ...d.data()}));
+            if (!UI.adminModal.classList.contains('hide')) renderAdminItems();
+        }, e => console.error(e));
+
+        onSnapshot(toursCol, (snap) => {
+            globalState.tournaments = snap.docs.map(d => ({id: d.id, ...d.data()}));
+            renderTournaments();
+            if (!UI.adminModal.classList.contains('hide')) renderAdminTournaments();
+        }, e => console.error(e));
+
+        onSnapshot(vouchersCol, (snap) => {
+            globalState.vouchers = snap.docs.map(d => ({id: d.id, ...d.data()}));
+            if (!UI.adminModal.classList.contains('hide')) renderAdminVouchers();
+        }, e => console.error(e));
+
+        onSnapshot(logsCol, (snap) => {
+            globalState.logs = snap.docs.map(d => ({id: d.id, ...d.data()})).sort((a,b) => (b.ts||0) - (a.ts||0));
+            if (!UI.adminModal.classList.contains('hide')) renderAdminLogs();
+        }, e => console.error(e));
+    }
+
+    async function logAction(actionStr) {
+        if(!currentUserId || !currentUser) return;
+        await addDoc(logsCol, {
+            userId: currentUserId,
+            username: currentUser.username,
+            action: actionStr,
+            ts: Date.now()
+        });
+    }
+
+    // Dashboard UI Updates
+    function updateUI() {
+        if (!currentUser) return;
+        UI.playerName.textContent = currentUser.username;
+        UI.playerNotes.textContent = currentUser.notes || 0;
+        UI.playerBoxes.textContent = currentUser.giftBoxes || 0;
+        
+        // Inventory
+        UI.inventoryList.innerHTML = '';
+        const inv = currentUser.inventory || [];
+        
+        if (inv.length === 0) {
+            UI.inventoryList.innerHTML = '<div class="text-gray-500 text-sm italic text-center py-4">Your inventory is empty. Open boxes to find items!</div>';
+        } else {
+            const counts = {};
+            inv.forEach(item => { counts[item.name] = (counts[item.name] || 0) + 1; });
+            
+            for (const [name, count] of Object.entries(counts)) {
+                const div = document.createElement('div');
+                div.className = 'flex justify-between items-center bg-gray-800/80 p-3 rounded-xl border border-gray-700/50 hover:border-gray-600 transition-colors';
+                
+                div.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full bg-gray-900 flex items-center justify-center text-xs border border-gray-700">🎁</div>
+                        <span class="font-medium text-gray-200">${name}</span>
+                        ${count > 1 ? `<span class="bg-purple-900/50 text-purple-300 text-xs px-2 py-0.5 rounded-md font-bold border border-purple-800/50">x${count}</span>` : ''}
+                    </div>
+                    <button onclick="window.consumeItem('${name}')" class="bg-gray-700 hover:bg-gray-600 text-xs px-4 py-2 rounded-lg font-bold text-white transition-colors">Redeem</button>
+                `;
+                UI.inventoryList.appendChild(div);
+            }
+        }
+    }
+
+    // Global Functions for inline HTML handlers
+    window.consumeItem = async (itemName) => {
+        if(!currentUser) return;
+        const inv = [...(currentUser.inventory || [])];
+        const idx = inv.findIndex(i => i.name === itemName);
+        if (idx !== -1) {
+            inv.splice(idx, 1);
+            await updateDoc(doc(usersCol, currentUserId), { inventory: inv });
+            await logAction(`Redeemed/Consumed item: ${itemName}`);
+            showModal("Item Redeemed", `You have successfully consumed "${itemName}".`);
+        }
+    };
+
+    // Box Opening Logic
+    async function performBoxPull() {
+        if(globalState.items.length === 0) {
+            showModal("Item Pool Empty", "The admin hasn't added any items to the pool yet!");
+            return false;
+        }
+        const randItem = globalState.items[Math.floor(Math.random() * globalState.items.length)];
+        const newInv = [...(currentUser.inventory || []), { name: randItem.name, acquiredAt: Date.now() }];
+        
+        await updateDoc(doc(usersCol, currentUserId), { inventory: newInv });
+        await logAction(`Opened a Gift Box and received: ${randItem.name}`);
+        showModal("Gift Box Opened!", `🎉 You received: ${randItem.name}!`);
+        return true;
+    }
+
+    UI.openBoxBtn.onclick = async () => {
+        if (!currentUser) return;
+        const currentBoxes = currentUser.giftBoxes || 0;
+        
+        if (currentBoxes <= 0) {
+            return showModal("No Boxes", "You don't have any Gift Boxes. Try redeeming a voucher or buying one!");
+        }
+        
+        const success = await performBoxPull();
+        if (success) {
+            await updateDoc(doc(usersCol, currentUserId), { giftBoxes: currentBoxes - 1 });
+        }
+    };
+
+    UI.buyBoxBtn.onclick = async () => {
+        if (!currentUser) return;
+        const notes = currentUser.notes || 0;
+        
+        if (notes < 10) {
+            return showModal("Not Enough Notes", "You need 10 Notes to buy and open a box.");
+        }
+        
+        const success = await performBoxPull();
+        if (success) {
+            await updateDoc(doc(usersCol, currentUserId), { notes: notes - 10 });
+        }
+    };
+
+    // Vouchers
+    UI.redeemVoucherBtn.onclick = async () => {
+        if (!currentUser) return;
+        const code = UI.voucherInput.value.trim().toUpperCase();
+        if (!code) return;
+
+        const redeemed = currentUser.redeemedVouchers || [];
+        if (redeemed.includes(code)) {
+            return showModal("Already Redeemed", "You have already used this voucher code.");
+        }
+
+        const v = globalState.vouchers.find(x => x.code === code);
+        if (v) {
+            const currentBoxes = currentUser.giftBoxes || 0;
+            const amount = v.amount || 1;
+            
+            await updateDoc(doc(usersCol, currentUserId), { 
+                giftBoxes: currentBoxes + amount,
+                redeemedVouchers: [...redeemed, code]
+            });
+            
+            await logAction(`Redeemed voucher ${code} for ${amount} box(es)`);
+            UI.voucherInput.value = '';
+            showModal("Success!", `You redeemed code ${code} and received ${amount} Gift Box(es)!`);
+        } else {
+            showModal("Invalid Code", "That voucher code does not exist.");
+        }
+    };
+
+    // Tournaments
+    function renderTournaments() {
+        UI.tournamentsList.innerHTML = '';
+        if (globalState.tournaments.length === 0) {
+            UI.tournamentsList.innerHTML = '<div class="text-gray-500 text-sm italic text-center py-8">No active tournaments right now.</div>';
+            return;
+        }
+        
+        const joined = currentUser ? (currentUser.joinedTournaments || []) : [];
+
+        globalState.tournaments.forEach(t => {
+            const div = document.createElement('div');
+            const isJoined = joined.includes(t.id);
+            div.className = `p-5 rounded-2xl border transition-all ${isJoined ? 'bg-indigo-900/20 border-indigo-500/50' : 'bg-gray-800/50 border-gray-700 hover:border-purple-500/50'}`;
+            
+            div.innerHTML = `
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 gap-3">
+                    <h4 class="font-bold text-lg text-gray-100 flex items-center gap-2">
+                        ${isJoined ? '✅' : '🏆'} ${t.name}
+                    </h4>
+                    <span class="bg-gray-900 text-gray-300 text-xs px-3 py-1.5 rounded-lg font-bold border border-gray-700 shrink-0">Fee: ${t.fee} Notes</span>
+                </div>
+                <p class="text-sm text-gray-400 mb-3">${t.description}</p>
+                <div class="bg-gray-950/50 rounded-lg p-3 text-xs text-gray-400 mb-4 border border-gray-800/50">
+                    <strong class="text-gray-300">Rules:</strong> ${t.rules}
+                </div>
+                <button 
+                    onclick="window.joinTournament('${t.id}', ${t.fee})" 
+                    ${isJoined ? 'disabled' : ''}
+                    class="w-full ${isJoined ? 'bg-indigo-600/30 text-indigo-300 cursor-not-allowed' : 'bg-gray-700 hover:bg-indigo-600 text-white'} text-sm font-bold py-3 rounded-xl transition-colors">
+                    ${isJoined ? 'Already Registered' : 'Register for Tournament'}
+                </button>
+            `;
+            UI.tournamentsList.appendChild(div);
+        });
+    }
+
+    window.joinTournament = async (tId, fee) => {
+        if (!currentUser) return;
+        
+        const joined = currentUser.joinedTournaments || [];
+        if (joined.includes(tId)) {
+            return showModal("Error", "You are already registered for this tournament.");
+        }
+
+        const notes = currentUser.notes || 0;
+        if (notes < fee) {
+            return showModal("Insufficient Funds", `You need ${fee} Notes to enter this tournament.`);
+        }
+
+        await updateDoc(doc(usersCol, currentUserId), { 
+            notes: notes - fee,
+            joinedTournaments: [...joined, tId]
+        });
+        
+        await logAction(`Registered for tournament ID: ${tId} (Fee: ${fee})`);
+        showModal("Registered!", "You have successfully signed up for the tournament.");
+    };
+
+    // --- ADMIN PANEL LOGIC ---
+
+    UI.openAdminBtn.onclick = () => {
+        UI.adminModal.classList.remove('hide');
+        UI.adminLogin.classList.remove('hide');
+        UI.adminUI.classList.add('hide');
+        UI.adminPassInput.value = '';
+        UI.adminError.classList.add('hidden');
+    };
+
+    UI.adminCloseBtn.onclick = () => UI.adminModal.classList.add('hide');
+    UI.adminExitBtn.onclick = () => UI.adminModal.classList.add('hide');
+
+    UI.adminEnterBtn.onclick = () => {
+        if (UI.adminPassInput.value === '2013') {
+            UI.adminLogin.classList.add('hide');
+            UI.adminUI.classList.remove('hide');
+            renderAdminPlayers();
+            renderAdminItems();
+            renderAdminTournaments();
+            renderAdminVouchers();
+            renderAdminLogs();
+        } else {
+            UI.adminError.classList.remove('hidden');
+        }
+    };
+
+    // Tab Switching
+    UI.adminTabs.forEach(tab => {
+        tab.onclick = () => {
+            UI.adminTabs.forEach(t => {
+                t.classList.remove('border-red-500', 'text-white');
+                t.classList.add('border-transparent', 'text-gray-500');
+            });
+            tab.classList.add('border-red-500', 'text-white');
+            tab.classList.remove('border-transparent', 'text-gray-500');
+            
+            UI.adminTabContents.forEach(c => c.classList.add('hide'));
+            document.getElementById(tab.dataset.target).classList.remove('hide');
+        };
+    });
+
+    // 1. Players (Edit specific values)
+    function renderAdminPlayers() {
+        const list = document.getElementById('admin-players-list');
+        list.innerHTML = '';
+        globalState.users.forEach(u => {
+            const div = document.createElement('div');
+            div.className = 'bg-gray-800 p-4 rounded-xl border border-gray-700 flex flex-col md:flex-row justify-between md:items-center gap-4';
+            
+            const invCount = u.inventory ? u.inventory.length : 0;
+            
+            div.innerHTML = `
+                <div class="flex-1">
+                    <div class="font-bold text-lg text-gray-200">${u.username}</div>
+                    <div class="text-xs text-gray-500 font-mono mb-2">ID: ${u.id.substring(0,10)}...</div>
+                    <div class="text-xs text-gray-400">Inventory Items: ${invCount}</div>
+                </div>
+                <div class="flex flex-col sm:flex-row gap-3 bg-gray-900 p-3 rounded-lg border border-gray-800">
+                    <div class="flex items-center gap-2">
+                        <label class="text-xs text-gray-500 w-12">Notes:</label>
+                        <input type="number" id="adm-notes-${u.id}" value="${u.notes || 0}" class="w-20 bg-gray-950 text-white border border-gray-700 rounded px-2 py-1 text-sm outline-none focus:border-red-500">
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <label class="text-xs text-gray-500 w-12">Boxes:</label>
+                        <input type="number" id="adm-boxes-${u.id}" value="${u.giftBoxes || 0}" class="w-20 bg-gray-950 text-white border border-gray-700 rounded px-2 py-1 text-sm outline-none focus:border-red-500">
+                    </div>
+                    <button onclick="window.adminSaveUser('${u.id}')" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs px-4 py-1.5 rounded font-bold transition-colors">Save Stats</button>
+                    <button onclick="window.adminDeleteUser('${u.id}')" class="bg-red-600/20 hover:bg-red-500 text-red-500 hover:text-white text-xs px-3 py-1.5 rounded border border-red-500/20 transition-colors ml-auto sm:ml-2">Delete</button>
+                </div>
+            `;
+            list.appendChild(div);
+        });
+    }
+
+    window.adminSaveUser = async (uId) => {
+        const notesVal = parseInt(document.getElementById(`adm-notes-${uId}`).value) || 0;
+        const boxesVal = parseInt(document.getElementById(`adm-boxes-${uId}`).value) || 0;
+        
+        await updateDoc(doc(usersCol, uId), { 
+            notes: notesVal,
+            giftBoxes: boxesVal
+        });
+        
+        // Brief visual feedback on button could go here, but snapshot updates instantly
+    };
+
+    window.adminDeleteUser = async (uId) => {
+        // Since we can't use alert/confirm, we'll just delete directly from admin panel for now,
+        // or a custom confirmation could be built. For brevity, immediate delete.
+        await deleteDoc(doc(usersCol, uId));
+    };
+
+    // 2. Items Pool
+    function renderAdminItems() {
+        const list = document.getElementById('admin-items-list');
+        list.innerHTML = '';
+        if(globalState.items.length === 0) {
+             list.innerHTML = '<div class="col-span-full text-gray-500 text-sm italic">Item pool is empty. Add items to allow opening gift boxes.</div>';
+        }
+        globalState.items.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'bg-gray-800 p-3 rounded-lg flex justify-between items-center border border-gray-700 gap-2';
+            div.innerHTML = `
+                <span class="text-sm font-medium truncate" title="${item.name}">${item.name}</span>
+                <button onclick="window.adminDeleteItem('${item.id}')" class="text-red-400 hover:text-white hover:bg-red-500 p-1.5 rounded transition-colors" title="Remove">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            `;
+            list.appendChild(div);
+        });
+    }
+
+    document.getElementById('add-item-btn').onclick = async () => {
+        const input = document.getElementById('new-item-name');
+        const name = input.value.trim();
+        if(name) {
+            await addDoc(itemsCol, { name });
+            input.value = '';
+        }
+    };
+    window.adminDeleteItem = async (id) => await deleteDoc(doc(itemsCol, id));
+
+    // 3. Tournaments
+    function renderAdminTournaments() {
+        const list = document.getElementById('admin-tours-list');
+        list.innerHTML = '';
+        globalState.tournaments.forEach(t => {
+            const div = document.createElement('div');
+            div.className = 'bg-gray-800 p-4 rounded-xl flex flex-col sm:flex-row justify-between items-start border border-gray-700 gap-4';
+            div.innerHTML = `
+                <div class="flex-1">
+                    <div class="font-bold text-md text-gray-200 mb-1">${t.name} <span class="bg-gray-900 text-xs px-2 py-0.5 rounded border border-gray-700 text-gray-400 ml-2">Fee: ${t.fee}</span></div>
+                    <div class="text-xs text-gray-400 line-clamp-2">${t.description}</div>
+                </div>
+                <button onclick="window.adminDeleteTour('${t.id}')" class="bg-red-600 hover:bg-red-500 text-white text-xs px-4 py-2 rounded-lg font-bold transition-colors shrink-0">Delete</button>
+            `;
+            list.appendChild(div);
+        });
+    }
+
+    document.getElementById('add-tour-btn').onclick = async () => {
+        const n = document.getElementById('new-tour-name').value.trim();
+        const d = document.getElementById('new-tour-desc').value.trim();
+        const r = document.getElementById('new-tour-rules').value.trim();
+        const f = parseInt(document.getElementById('new-tour-fee').value) || 0;
+        
+        if(n) {
+            await addDoc(toursCol, { name: n, description: d, rules: r, fee: f });
+            document.getElementById('new-tour-name').value = '';
+            document.getElementById('new-tour-desc').value = '';
+            document.getElementById('new-tour-rules').value = '';
+            document.getElementById('new-tour-fee').value = '';
+        }
+    };
+    window.adminDeleteTour = async (id) => await deleteDoc(doc(toursCol, id));
+
+    // 4. Vouchers
+    function renderAdminVouchers() {
+        const list = document.getElementById('admin-vouchers-list');
+        list.innerHTML = '';
+        globalState.vouchers.forEach(v => {
+            const div = document.createElement('div');
+            div.className = 'bg-gray-800 p-3 rounded-lg flex justify-between items-center border border-gray-700';
+            div.innerHTML = `
+                <div class="flex items-center gap-4">
+                    <span class="text-sm font-mono tracking-widest font-bold text-gray-200 bg-gray-900 px-3 py-1 rounded border border-gray-700">${v.code}</span>
+                    <span class="text-xs text-gray-400">Yields: <strong class="text-pink-400">${v.amount || 1} Box(es)</strong></span>
+                </div>
+                <button onclick="window.adminDeleteVoucher('${v.id}')" class="text-red-500 hover:text-red-400 text-xs font-bold uppercase">Revoke</button>
+            `;
+            list.appendChild(div);
+        });
+    }
+
+    document.getElementById('add-voucher-btn').onclick = async () => {
+        const codeInput = document.getElementById('new-voucher-code');
+        const amountInput = document.getElementById('new-voucher-amount');
+        const code = codeInput.value.trim().toUpperCase();
+        const amount = parseInt(amountInput.value) || 1;
+        
+        if(code) {
+            await addDoc(vouchersCol, { code, amount });
+            codeInput.value = '';
+            amountInput.value = '1';
+        }
+    };
+    window.adminDeleteVoucher = async (id) => await deleteDoc(doc(vouchersCol, id));
+
+    // 5. Logs
+    function renderAdminLogs() {
+        const list = document.getElementById('admin-logs-list');
+        list.innerHTML = '';
+        if(globalState.logs.length === 0) {
+            list.innerHTML = '<div class="text-gray-500 italic">No activity logged yet.</div>';
+        }
+        globalState.logs.forEach(log => {
+            const div = document.createElement('div');
+            div.className = 'py-1.5 border-b border-gray-800/50 last:border-0 hover:bg-gray-900/50 px-2 rounded';
+            const d = new Date(log.ts).toLocaleString(undefined, { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit', second:'2-digit'});
+            div.innerHTML = `<span class="text-gray-600 w-32 inline-block">[${d}]</span> <span class="text-purple-400 font-bold">${log.username}:</span> <span class="text-gray-300">${log.action}</span>`;
+            list.appendChild(div);
+        });
+    }
+
+    // Run Init
+    initAuth();
+
+</script>
+</body>
+</html>
